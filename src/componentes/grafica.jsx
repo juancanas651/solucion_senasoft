@@ -1,79 +1,91 @@
 import React from "react";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-// src/componentes/Graficas.jsx
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"]
+// Paleta más amplia de colores
+const COLORS = [
+    "#0088FE", "#00C49F", "#FFBB28", "#FF8042",
+    "#A569BD", "#5DADE2", "#45B39D", "#F1948A",
+    "#52BE80", "#F7DC6F", "#DC7633", "#7F8C8D",
+    "#0088FE", "#00C49F", "#FFBB28", "#FF8042",
+    "#A569BD", "#5DADE2", "#45B39D", "#F1948A",
+    "#52BE80", "#F7DC6F", "#DC7633", "#7F8C8D"
+];
 
 function Graficas({ datos }) {
-    // Distribución por programa
     const programas = Object.entries(
-        datos.reduce((acc, d) => {
-            acc[d.NOMBRE_PROGRAMA_FORMACION] = (acc[d.NOMBRE_PROGRAMA_FORMACION] || 0) + 1
-            return acc
+        datos.reduce((acumulado, d) => {
+            const key = d.nombre_programa;//{"adso":2,"turimso":3}
+            acumulado[key] = (acumulado[key] || 0) + 1;
+            return acumulado;
         }, {})
-    ).map(([name, value]) => ({ name, value }))
+    ).map(([name, cantidad]) => ({ name: `${name}`, cantidad }))
 
-    // Distribución por modalidad
     const modalidades = Object.entries(
-        datos.reduce((acc, d) => {
-            acc[d.MODALIDAD] = (acc[d.MODALIDAD] || 0) + 1
-            return acc
+        datos.reduce((acumulado, d) => {
+            const key = d.modalidad;
+            acumulado[key] = (acumulado[key] || 0) + 1;
+            return acumulado;
         }, {})
-    ).map(([name, value]) => ({ name, value }))
+    ).map(([name, cantidad]) => ({ name: `${name}`, cantidad }));
 
-    // Distribución por nivel
     const niveles = Object.entries(
-        datos.reduce((acc, d) => {
-            acc[d.NIVEL_FORMACION] = (acc[d.NIVEL_FORMACION] || 0) + 1
-            return acc
+        datos.reduce((acumulado, d) => {
+            const key = d.nivel_formacion;
+            acumulado[key] = (acumulado[key] || 0) + 1;
+            return acumulado;
         }, {})
-    ).map(([name, value]) => ({ name, value }))
+    ).map(([name, cantidad]) => ({ name: `${name}`, cantidad }));
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            {/* Programas */}
-            <div className="bg-white p-4 rounded-xl shadow">
+        <div className="flex gap-4 mt-4">
+            <div className="bg-white p-4 rounded-xl shadow w-8/12">
                 <h2 className="text-lg font-semibold mb-2">Grupos por Programa</h2>
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer >
                     <BarChart data={programas}>
-                        <XAxis dataKey="name" />
+                        <XAxis dataKey="name" hide />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="value" fill="#0088FE" />
+                        <Legend />
+                        <Bar dataKey="cantidad">
+                            {programas.map((_, index) => (
+                                <Cell key={index} fill={COLORS[index]} />
+                            ))}
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </div>
-
-            {/* Modalidades */}
-            <div className="bg-white p-4 rounded-xl shadow">
-                <h2 className="text-lg font-semibold mb-2">Modalidad</h2>
-                <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                        <Pie data={modalidades} dataKey="value" outerRadius={100} label>
-                            {modalidades.map((_, index) => (
-                                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Niveles */}
-            <div className="bg-white p-4 rounded-xl shadow">
-                <h2 className="text-lg font-semibold mb-2">Niveles</h2>
-                <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                        <Pie data={niveles} dataKey="value" outerRadius={100} label>
-                            {niveles.map((_, index) => (
-                                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                    </PieChart>
-                </ResponsiveContainer>
+            <div className="w-4/12 ">
+                <div className="bg-white p-1 rounded-xl shadow mb-2">
+                    <h2 className="text-lg font-semibold mb-2">Modalidad</h2>
+                    <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                            <Pie data={modalidades} dataKey="cantidad" label>
+                                {modalidades.map((_, index) => (
+                                    <Cell key={index} fill={COLORS[index]} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="bg-white p-1 rounded-xl shadow">
+                    <h2 className="text-lg font-semibold mb-2">Niveles</h2>
+                    <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                            <Pie data={niveles} dataKey="cantidad" label>
+                                {niveles.map((_, index) => (
+                                    <Cell key={index} fill={COLORS[index]} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                            <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default Graficas
+export default Graficas;

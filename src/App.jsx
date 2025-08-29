@@ -1,66 +1,97 @@
 import { useState, useEffect } from 'react'
 import Tarjeta from './componentes/tarjeta'
-import Filtros from './componentes/filtros'
 import Graficas from './componentes/grafica'
 
 function App() {
   const [datos, setDatos] = useState([])
   const [filtros, setFiltros] = useState({ modalidad: "", programa: "", nivel: "" })
+  
   const [femeninos, setFemeninos] = useState(0)
   const [masculinos, setMasculinos] = useState(0)
   const [noBinarios, setNoBinarios] = useState(0)
+  const [totalAprendices, setTotal_aprendices] = useState(0)
   const [activos, setActivos] = useState(0)
 
+  const [modalidades, setModalidades] = useState([])
+  const [programas, setProgramas] = useState([])
+  const [niveles, setNiveles] = useState([])
+  
   useEffect(() => {
     fetch('/datos.json')
       .then(res => res.json())
       .then(data => setDatos(data))
   }, [])
+  const datosFiltrados = datos.filter(d =>
+    (filtros.modalidad === "" || d.modalidad === filtros.modalidad) &&
+    (filtros.programa === "" || d.nombre_programa === filtros.programa) &&
+    (filtros.nivel === "" || d.nivel_formacion === filtros.nivel)
+  )
+  useEffect(() => {
+    setModalidades([...new Set(datos.map(d => d.modalidad))])
+    setProgramas([...new Set(datos.map(d => d.nombre_programa))])
+    setNiveles([...new Set(datos.map(d => d.nivel_formacion))])
+  }, [datos])
 
   useEffect(() => {
-    if(!filtros){
-      setFemeninos(datos.total_femeninos || 0)
-      setMasculinos(datos.total_masculinos || 0)
-      setNoBinarios(datos.total_nobinarios || 0)
-      setActivos(datos.total_activos || 0)
-    }else{
-      
-    }
-  }, [datos, filtros])
+    let fem = 0, masc = 0, nb = 0, tot = 0, act = 0
 
-  // Aplica filtros dinámicos
-  const datosFiltrados = datos.filter(d =>
-    (filtros.modalidad === "" || d.MODALIDAD === filtros.modalidad) &&
-    (filtros.programa === "" || d.NOMBRE_PROGRAMA_FORMACION === filtros.programa) &&
-    (filtros.nivel === "" || d.NIVEL_FORMACION === filtros.nivel)
-  )
+    datosFiltrados.forEach(dato => {
+      fem += dato.total_femeninos || 0
+      masc += dato.total_masculinos || 0
+      nb  += dato.total_nobinario || 0
+      act += dato.total_aprendices_activos || 0
+      tot += dato.total_aprendices || 0
+    })
 
-  // Datos para tarjetas
-  const total = datosFiltrados.length
+    setFemeninos(fem)
+    setMasculinos(masc)
+    setNoBinarios(nb)
+    setTotal_aprendices(tot)
+    setActivos(act)
 
-
-  // Opciones de filtros
-  const programas = [...new Set(datos.map(d => d.NOMBRE_PROGRAMA_FORMACION))]
-  const modalidades = [...new Set(datos.map(d => d.MODALIDAD))]
-  const niveles = [...new Set(datos.map(d => d.NIVEL_FORMACION))]
+  }, [datosFiltrados])
+  const totalCursos = datosFiltrados.length
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-4">📊 Dashboard Aprendices</h1>
 
-      <Filtros filtros={filtros} setFiltros={setFiltros}
-        programas={programas} modalidades={modalidades} niveles={niveles} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <select className="p-2 border rounded"
+          value={filtros.modalidad}
+          onChange={e => setFiltros({ ...filtros, modalidad: e.target.value })}>
+          <option value="">Todas las Modalidades</option>
+          {modalidades.map(mod => (
+            <option key={mod} value={mod}>{mod}</option>
+          ))}
+        </select>
+        <select className="p-2 border rounded"
+          value={filtros.programa}
+          onChange={e => setFiltros({ ...filtros, programa: e.target.value })}>
+          <option value="">Todos los Programas</option>
+          {programas.map(prog => (
+            <option key={prog} value={prog}>{prog}</option>
+          ))}
+        </select>
+        <select className="p-2 border rounded"
+          value={filtros.nivel}
+          onChange={e => setFiltros({ ...filtros, nivel: e.target.value })}>
+          <option value="">Todos los Niveles</option>
+          {niveles.map(niv => (
+            <option key={niv} value={niv}>{niv}</option>
+          ))}
+        </select>
+      </div>
 
-      {/* Tarjetas */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
-        <Tarjeta titulo="Total Aprendices" valor={total} />
+        <Tarjeta titulo="Total cursos" valor={totalCursos} />
         <Tarjeta titulo="Femeninos" valor={femeninos} />
         <Tarjeta titulo="Masculinos" valor={masculinos} />
         <Tarjeta titulo="No Binarios" valor={noBinarios} />
+        <Tarjeta titulo="Total Aprendices" valor={totalAprendices} />
         <Tarjeta titulo="Activos" valor={activos} />
       </div>
 
-      {/* Gráficas */}
       {datosFiltrados.length > 0 ? (
         <Graficas datos={datosFiltrados} />
       ) : (
